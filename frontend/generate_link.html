@@ -1,0 +1,22 @@
+{{ define "generate_link" }}
+{{ template "header" }}
+<main class="px-3">
+    <h1>Shorten your link.</h1>
+    <p class="lead"> Lorem ipsum dolor sit amet consectetur adipisicing elit. Ut recusandae quisquam id earum omnis alias veniam sunt quasi debitis! Amet quo dolorum error cupiditate ut numquam sit reprehenderit eos. Debitis!</p>
+    <br>
+    <form action="/generate_link" method="post">
+      <fieldset disabled></fieldset>
+      <div class="input-group mb-3">
+        <input type="text" name="longlink" class="form-control" placeholder="{{ .LongLink}}" aria-label="Shorten your link" aria-describedby="button-addon2">
+      </div>
+    </fieldset>
+      <div class="form-group">
+        <label class="lead" for="disabledTextInput">New link</label>
+        <input type="text" id="disabledTextInput" class="form-control" value="{{ .ShortLink }}">
+      </div>
+    </form>
+
+  </main>
+
+{{ template "footer"}}
+{{ end }}
