@@ -33,9 +33,9 @@ func InsertToDB(m MyDB) {
 }
 
 // выборка данных из БД
-
 // проверка на дубликаты по полю Long_Link
-func LookForLongLink(loadedLink string) string {
+// выборка данных при редиректе
+func LookForDB(column, loadedLink string) string {
 	// подключение БД
 	db, err := sql.Open("mysql", "root:root@tcp(127.0.0.1:8889)/URL_Shortener")
 	if err != nil {
@@ -43,11 +43,19 @@ func LookForLongLink(loadedLink string) string {
 	}
 	defer db.Close()
 
-	res := db.QueryRow(fmt.Sprintf("SELECT * FROM `Links` WHERE `long_link` = '%s'", loadedLink))
+	res := db.QueryRow(fmt.Sprintf("SELECT * FROM `Links` WHERE `%s` = '%s'", column, loadedLink))
 	var row MyDB
 	err = res.Scan(&row.Id, &row.LongLink, &row.ShortLink, &row.ClickCounter)
 	if err != nil {
 		log.Print(err)
 	}
-	return (row.ShortLink)
+	switch column {
+	case "short_link":
+		row.ClickCounter++
+		db.Exec(fmt.Sprintf("UPDATE `Links` SET `click_counter` = '%d' WHERE `id` = '%d'", row.ClickCounter, row.Id))
+		return (row.LongLink)
+	case "long_link":
+		return (row.ShortLink)
+	}
+	return ""
 }

@@ -18,7 +18,8 @@ func HandlesFunc() {
 	http.Handle("/css/", http.StripPrefix("/css/", http.FileServer(http.Dir("../../frontend/css/"))))
 
 	rtr.HandleFunc("/", index).Methods("GET", "POST")
-	rtr.HandleFunc("/generate_link", generate_link).Methods("GET", "POST") // был гет стал гет пост
+	rtr.HandleFunc("/generate_link", generate_link).Methods("GET", "POST")
+	rtr.HandleFunc("/{shortlink:[A-z, 0-9]+}", redirect).Methods("GET")
 	http.Handle("/", rtr)
 }
 
@@ -28,6 +29,7 @@ func index(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprintf(w, err.Error())
 	}
 	t.ExecuteTemplate(w, "index", nil)
+
 }
 
 func generate_link(w http.ResponseWriter, r *http.Request) {
@@ -38,11 +40,11 @@ func generate_link(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	ll := db.LookForLongLink(link.LongLink)
+	ll := db.LookForDB("long_link", link.LongLink)
 	if ll != "" {
 		link.ShortLink = ll
 	} else {
-		link.ShortLink = r.Host + "/" + lg.LinksGen()
+		link.ShortLink = lg.LinksGen()
 		db.InsertToDB(link)
 	}
 	link.ClickCounter = 0
@@ -51,6 +53,13 @@ func generate_link(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		fmt.Fprintf(w, err.Error())
 	}
+	link.ShortLink = r.Host + "/" + link.ShortLink
 	t.ExecuteTemplate(w, "generate_link", link)
-	//t.Execute(w, nil)
+}
+
+func redirect(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	ll := db.LookForDB("short_link", vars["shortlink"])
+	http.Redirect(w, r, ll, 302)
+
 }
